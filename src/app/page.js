@@ -1,101 +1,176 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import React, { useState } from 'react'
+import { Search, Plus, X } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
+
+// Mock data for chatbots
+const initialChatbots = [
+  { id: 1, name: 'Customer Support Bot', description: 'Handles customer inquiries and support tickets', category: 'Support', commands: ['help', 'faq', 'ticket'], permissions: ['read_user_data', 'create_ticket'] },
+  { id: 2, name: 'Sales Assistant', description: 'Helps with product recommendations and sales', category: 'Sales', commands: ['products', 'pricing', 'discount'], permissions: ['read_product_data', 'apply_discount'] },
+  { id: 3, name: 'Appointment Scheduler', description: 'Books appointments and manages schedules', category: 'Scheduling', commands: ['book', 'cancel', 'reschedule'], permissions: ['read_calendar', 'write_calendar'] },
+]
+
+const availablePermissions = [
+  'read_user_data',
+  'write_user_data',
+  'read_product_data',
+  'write_product_data',
+  'read_calendar',
+  'write_calendar',
+  'create_ticket',
+  'apply_discount',
+]
+
+export default function ChatbotDashboard() {
+  const [chatbots, setChatbots] = useState(initialChatbots)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [newBot, setNewBot] = useState({ name: '', description: '', commands: [''], permissions: [] })
+
+  const filteredChatbots = chatbots.filter(bot => 
+    bot.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    bot.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    bot.category.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  const handleInputChange = (e) => {
+    setNewBot({ ...newBot, [e.target.name]: e.target.value })
+  }
+
+  const handleCommandChange = (index, value) => {
+    const updatedCommands = [...newBot.commands]
+    updatedCommands[index] = value
+    setNewBot({ ...newBot, commands: updatedCommands })
+  }
+
+  const addCommand = () => {
+    setNewBot({ ...newBot, commands: [...newBot.commands, ''] })
+  }
+
+  const removeCommand = (index) => {
+    const updatedCommands = newBot.commands.filter((_, i) => i !== index)
+    setNewBot({ ...newBot, commands: updatedCommands })
+  }
+
+  const handlePermissionChange = (value) => {
+    setNewBot({ ...newBot, permissions: value })
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    const newBotWithId = { ...newBot, id: chatbots.length + 1, category: 'Custom' }
+    setChatbots([...chatbots, newBotWithId])
+    setNewBot({ name: '', description: '', commands: [''], permissions: [] })
+  }
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Chatbot Automation Dashboard</h1>
+      
+      <div className="relative mb-6">
+        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Search chatbots..."
+          className="pl-8"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+      </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Available Chatbots</h2>
+          <div className="grid grid-cols-1 gap-4">
+            {filteredChatbots.map(bot => (
+              <Card key={bot.id}>
+                <CardHeader>
+                  <CardTitle>{bot.name}</CardTitle>
+                  <CardDescription>{bot.category}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="mb-2">{bot.description}</p>
+                  <p className="text-sm text-muted-foreground">Commands: {bot.commands.join(', ')}</p>
+                  <p className="text-sm text-muted-foreground">Permissions: {bot.permissions.join(', ')}</p>
+                </CardContent>
+                <CardFooter>
+                  <Button>Select Bot</Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Add New Chatbot</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="name">Bot Name</Label>
+              <Input
+                id="name"
+                name="name"
+                value={newBot.name}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                value={newBot.description}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div>
+              <Label>Commands</Label>
+              {newBot.commands.map((command, index) => (
+                <div key={index} className="flex items-center mt-2">
+                  <Input
+                    value={command}
+                    onChange={(e) => handleCommandChange(index, e.target.value)}
+                    placeholder={`Command ${index + 1}`}
+                    className="mr-2"
+                  />
+                  <Button type="button" variant="outline" size="icon" onClick={() => removeCommand(index)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" className="mt-2" onClick={addCommand}>
+                <Plus className="h-4 w-4 mr-2" /> Add Command
+              </Button>
+            </div>
+            <div>
+              <Label htmlFor="permissions">Permissions</Label>
+              <Select
+                onValueChange={handlePermissionChange}
+                value={newBot.permissions}
+                multiple
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select permissions" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availablePermissions.map((permission) => (
+                    <SelectItem key={permission} value={permission}>
+                      {permission}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit">Add Chatbot</Button>
+          </form>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
